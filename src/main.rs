@@ -3,12 +3,14 @@ use rand_chacha::ChaCha8Rng;
 use std::collections::HashMap;
 use std::io;
 use std::io::Write;
-use std::time::SystemTime;
+use std::time::{Duration, SystemTime};
+
+use num_format::{Locale, ToFormattedString};
 
 fn main() {
     let mut rng = ChaCha8Rng::seed_from_u64(1234569);
 
-    println!("generating");
+    println!("generating...");
     let nums: Vec<i32> = (0..10000).map(|_| rng.gen_range(0..10000)).collect();
     let search_functions: Vec<(&str, &dyn Fn(Vec<i32>, i32) -> Vec<i32>)> = vec![
         ("sort_stable", &two_sum_sort_stable),
@@ -17,33 +19,36 @@ fn main() {
         ("naive", &two_sum_naive),
     ];
 
-    let search_limit_in_secs: u64 = 10;
     for f in &search_functions {
         let mut run_times: Vec<u128> = Vec::new();
-        println!("Function {} start", f.0);
+        print!("{}", f.0);
+        io::stdout().flush().unwrap();
         let start_search = SystemTime::now();
-        let mut search_duration: u64 = 0;
-        while search_duration < search_limit_in_secs {
+        let mut search_duration: Duration = Duration::from_nanos(0);
+        while search_duration.as_secs() < 10 {
             let run_nums = nums.clone();
             let start_iteration = SystemTime::now();
-
             (f.1)(run_nums, -1);
-
             let end = SystemTime::now();
             let iteration_duration = end.duration_since(start_iteration).unwrap().as_nanos();
-
-            print!(".");
-            io::stdout().flush().unwrap();
             run_times.push(iteration_duration);
-
-            search_duration = end.duration_since(start_search).unwrap().as_secs();
+            let prev = search_duration.as_secs();
+            search_duration = end.duration_since(start_search).unwrap();
+            if prev != search_duration.as_secs() {
+                print!(".");
+                io::stdout().flush().unwrap();
+            }
         }
 
         let sum = run_times.iter().sum::<u128>();
         let count = run_times.len() as u128;
         let mean = sum / count;
         println!();
-        println!("Mean of run times (nanos): {}", mean);
+        println!(
+            "  mean runtime {} nanos ({} iterations)",
+            mean.to_formatted_string(&Locale::da),
+            count.to_formatted_string(&Locale::da)
+        );
     }
 }
 
