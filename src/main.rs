@@ -65,11 +65,9 @@ fn two_sum_sort_search_for_indices(nums: Vec<i32>, targets: (i32, i32)) -> Vec<i
     let mut result: Vec<i32> = Vec::with_capacity(2);
     let mut i = 0;
     while i < nums.len() && result.len() < 2 {
-        let num = nums[1];
-        if targets.0 == num {
-            result.push(num);
-        } else if targets.1 == num {
-            result.push(num);
+        let num = nums[i];
+        if targets.0 == num || targets.1 == num {
+            result.push(i as i32);
         }
 
         i = i + 1;
