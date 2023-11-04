@@ -11,7 +11,7 @@ fn main() {
     let mut rng = ChaCha8Rng::seed_from_u64(1234569);
 
     println!("generating...");
-    let nums: Vec<i32> = (0..10000).map(|_| rng.gen_range(0..10000)).collect();
+    let nums: Vec<i32> = (0..1000000).map(|_| rng.gen_range(0..1000000)).collect();
     let search_functions: Vec<(&str, &dyn Fn(Vec<i32>, i32) -> Vec<i32>)> = vec![
         ("sort_stable", &two_sum_sort_stable),
         ("sort_unstable", &two_sum_sort_unstable),
@@ -25,7 +25,7 @@ fn main() {
         io::stdout().flush().unwrap();
         let start_search = SystemTime::now();
         let mut search_duration: Duration = Duration::from_nanos(0);
-        while search_duration.as_secs() < 10 {
+        while search_duration.as_secs() < 60 {
             let run_nums = nums.clone();
             let start_iteration = SystemTime::now();
             (f.1)(run_nums, -1);
