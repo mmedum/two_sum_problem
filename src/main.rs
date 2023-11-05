@@ -13,8 +13,10 @@ fn main() {
     println!("generating...");
     let nums: Vec<i32> = (0..1000000).map(|_| rng.gen_range(0..1000000)).collect();
     let search_functions: Vec<(&str, &dyn Fn(Vec<i32>, i32) -> Vec<i32>)> = vec![
-        ("sort_stable", &two_sum_sort_stable),
-        ("sort_unstable", &two_sum_sort_unstable),
+        ("sort_stable_linear", &two_sum_sort_stable_linear_search),
+        ("sort_stable_binary", &two_sum_sort_stable_binary_search),
+        ("sort_unstable_linear", &two_sum_sort_unstable_linear_search),
+        ("sort_unstable_binary", &two_sum_sort_unstable_binary_search),
         ("hash", &two_sum_hash),
         ("naive", &two_sum_naive),
     ];
@@ -52,21 +54,41 @@ fn main() {
     }
 }
 
-fn two_sum_sort_stable(nums: Vec<i32>, target: i32) -> Vec<i32> {
+fn two_sum_sort_stable_linear_search(nums: Vec<i32>, target: i32) -> Vec<i32> {
     let mut elements = nums.clone();
     elements.sort();
     let targets = two_sum_sort_find_values(elements, target);
-    return two_sum_sort_search_for_indices(nums, targets);
+    return two_sum_sort_linear_search_for_indices(nums, targets);
 }
 
-fn two_sum_sort_unstable(nums: Vec<i32>, target: i32) -> Vec<i32> {
+fn two_sum_sort_stable_binary_search(nums: Vec<i32>, target: i32) -> Vec<i32> {
+    let mut elements = nums.clone();
+    elements.sort();
+    let targets = two_sum_sort_find_values(elements, target);
+    let mut result: Vec<i32> = Vec::with_capacity(2);
+    result.push(two_sum_sort_binary_search_for_indices(&nums, targets.0));
+    result.push(two_sum_sort_binary_search_for_indices(&nums, targets.1));
+    return result;
+}
+
+fn two_sum_sort_unstable_linear_search(nums: Vec<i32>, target: i32) -> Vec<i32> {
     let mut elements = nums.clone();
     elements.sort_unstable();
     let targets = two_sum_sort_find_values(elements, target);
-    return two_sum_sort_search_for_indices(nums, targets);
+    return two_sum_sort_linear_search_for_indices(nums, targets);
 }
 
-fn two_sum_sort_search_for_indices(nums: Vec<i32>, targets: (i32, i32)) -> Vec<i32> {
+fn two_sum_sort_unstable_binary_search(nums: Vec<i32>, target: i32) -> Vec<i32> {
+    let mut elements = nums.clone();
+    elements.sort_unstable();
+    let targets = two_sum_sort_find_values(elements, target);
+    let mut result: Vec<i32> = Vec::with_capacity(2);
+    result.push(two_sum_sort_binary_search_for_indices(&nums, targets.0));
+    result.push(two_sum_sort_binary_search_for_indices(&nums, targets.1));
+    return result;
+}
+
+fn two_sum_sort_linear_search_for_indices(nums: Vec<i32>, targets: (i32, i32)) -> Vec<i32> {
     let mut result: Vec<i32> = Vec::with_capacity(2);
     let mut i = 0;
     while i < nums.len() && result.len() < 2 {
@@ -79,6 +101,26 @@ fn two_sum_sort_search_for_indices(nums: Vec<i32>, targets: (i32, i32)) -> Vec<i
     }
 
     return result;
+}
+
+fn two_sum_sort_binary_search_for_indices(nums: &Vec<i32>, target: i32) -> i32 {
+    let mut low: i32 = 0;
+    let mut high: i32 = nums.len() as i32 - 1;
+    while low <= high {
+        let mid = ((high - low) / 2) + low;
+        let mid_index = mid as usize;
+        let val = nums[mid_index];
+
+        if val == target {
+            return mid_index as i32;
+        } else if val < target {
+            low = mid + 1;
+        } else if val > target {
+            high = mid - 1;
+        }
+    }
+
+    return -1;
 }
 
 fn two_sum_sort_find_values(nums: Vec<i32>, target: i32) -> (i32, i32) {
