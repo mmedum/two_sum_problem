@@ -1,22 +1,29 @@
 use rand::prelude::*;
 use rand_chacha::ChaCha8Rng;
 use std::collections::HashMap;
-use std::io;
 use std::io::Write;
 use std::time::{Duration, SystemTime};
+use std::{io, vec};
 
 use num_format::{Locale, ToFormattedString};
+
+mod quicksort;
+mod radix;
 
 fn main() {
     let mut rng = ChaCha8Rng::seed_from_u64(1234569);
 
     println!("generating...");
-    let nums: Vec<i32> = (0..1000000).map(|_| rng.gen_range(0..1000000)).collect();
+    let nums: Vec<i32> = (0..1_000_000).map(|_| rng.gen_range(0..1000000)).collect();
     let search_functions: Vec<(&str, &dyn Fn(Vec<i32>, i32) -> Vec<i32>)> = vec![
-        ("sort_stable_linear", &two_sum_sort_stable_linear_search),
-        ("sort_unstable_linear", &two_sum_sort_unstable_linear_search),
-        ("sort_mem", &two_sum_sort_mem_search),
-        ("sort_unstable_mem", &two_sum_sort_unstable_mem_search),
+        ("sort_stable_linear", &quicksort::sort_stable),
+        ("sort_unstable_linear", &quicksort::sort_unstable),
+        ("sort_unstable_packed", &quicksort::sort_unstable_packed),
+        ("sort_radix_1t", &radix::sort_radix_1t),
+        ("sort_radix_4t", &radix::sort_radix_4t),
+        ("sort_radix_8t", &radix::sort_radix_8t),
+        ("sort_tuples", &quicksort::sort_tuples),
+        ("sort_unstable_tuples", &quicksort::sort_unstable_tuples),
         ("hash", &two_sum_hash),
         ("naive", &two_sum_naive),
     ];
@@ -78,40 +85,34 @@ fn two_sum_sort_mem_find_values(elements: Vec<(i32, i32)>, target: i32) -> Vec<i
     while i < j {
         let temp = elements[i].0 + elements[j].0;
         if temp < target {
-            i = i + 1;
+            i += 1;
         } else if temp > target {
-            j = j - 1;
+            j -= 1;
         } else {
             return vec![elements[i].1, elements[j].1];
         }
     }
 
-    return Vec::new();
+    return vec![-1, -1];
 }
 
-fn two_sum_sort_stable_linear_search(nums: Vec<i32>, target: i32) -> Vec<i32> {
+fn sort_stable_linear_search(nums: Vec<i32>, target: i32) -> Vec<i32> {
     let mut elements = nums.clone();
     elements.sort();
-    let targets = two_sum_sort_find_values(elements, target);
-    return two_sum_sort_search_for_original_indices(nums, targets);
+
+    let targets = two_sum_sort_find_values(&elements, target);
+    return two_sum_sort_search_for_original_indices(&nums, targets);
 }
 
-fn two_sum_sort_unstable_linear_search(nums: Vec<i32>, target: i32) -> Vec<i32> {
-    let mut elements = nums.clone();
-    elements.sort_unstable();
-    let targets = two_sum_sort_find_values(elements, target);
-    return two_sum_sort_search_for_original_indices(nums, targets);
-}
-
-fn two_sum_sort_find_values(nums: Vec<i32>, target: i32) -> (i32, i32) {
+fn two_sum_sort_find_values(nums: &[i32], target: i32) -> (i32, i32) {
     let mut i = 0;
     let mut j = nums.len() - 1;
     while i < j {
         let temp = nums[i] + nums[j];
         if temp < target {
-            i = i + 1;
+            i += 1;
         } else if temp > target {
-            j = j - 1;
+            j -= 1;
         } else {
             return (nums[i], nums[j]);
         }
@@ -120,7 +121,7 @@ fn two_sum_sort_find_values(nums: Vec<i32>, target: i32) -> (i32, i32) {
     return (-1, -1);
 }
 
-fn two_sum_sort_search_for_original_indices(nums: Vec<i32>, targets: (i32, i32)) -> Vec<i32> {
+fn two_sum_sort_search_for_original_indices(nums: &[i32], targets: (i32, i32)) -> Vec<i32> {
     let mut result: Vec<i32> = Vec::with_capacity(2);
     let mut i = 0;
     while i < nums.len() && result.len() < 2 {
@@ -129,7 +130,7 @@ fn two_sum_sort_search_for_original_indices(nums: Vec<i32>, targets: (i32, i32))
             result.push(i as i32);
         }
 
-        i = i + 1;
+        i += 1;
     }
 
     return result;
@@ -143,7 +144,8 @@ fn two_sum_hash(nums: Vec<i32>, target: i32) -> Vec<i32> {
             None => complements.insert(target - num, i as i32),
         };
     }
-    return Vec::new();
+
+    return vec![-1, -1];
 }
 
 fn two_sum_naive(nums: Vec<i32>, target: i32) -> Vec<i32> {
@@ -154,5 +156,6 @@ fn two_sum_naive(nums: Vec<i32>, target: i32) -> Vec<i32> {
             }
         }
     }
-    return Vec::new();
+
+    return vec![-1, -1];
 }

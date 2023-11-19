@@ -7,3 +7,5 @@ edition = "2021"
 rand_chacha = "0.3.1"
 rand = "0.8.5"
 num-format = "0.4.4"
+dashmap = "5.5.3"
+voracious_radix_sort = { version = "1.2.0", features = ["voracious_multithread"] }
